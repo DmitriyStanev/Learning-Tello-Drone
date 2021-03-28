@@ -19,21 +19,6 @@ def findFace(img):
         cv2.circle(img, (cx, cy), 4, (0, 0, 255), cv2.FILLED)
         myFaceListCenter.append([cx, cy])
         myFaceListArea.append(area)
-        # box = (x, y, w, h)
-        # tracker = cv2.TrackerCSRT_create()
-        # tracker.init(img, box)
-        # tracker.update(img)
-
-        # tracker = cv2.TrackerCSRT_create()
-        # tracker = cv2.TrackerMIL_create()
-        # video = cv2.VideoCapture(0)
-        # if not video.isOpened():
-        #     print("Could not open video...")
-        #     sys.exit()
-        # ok, frame = video.read()
-        # bbox = (287, 23, 86, 320)
-        # bbox = cv2.selectROI(frame, False)
-        # ok = tracker.init(frame, bbox)
 
 
     if len(myFaceListArea) != 0:
