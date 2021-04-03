@@ -39,8 +39,19 @@ class poseDetector():
                                            self.mpPose.POSE_CONNECTIONS)
         return img
 
-    def findPosition(self, img, draw=True):
+
+    def checkPose(self, img):
+
         landmarkListC = []
+        fb = 0
+        posesDetected = {
+            'rightHandUpClosed': False,
+            'leftHandUpClosed': False,
+            'crossHands': False,
+            'touchingNose': False,
+            'rightHandUpOpen': False,
+            'leftHandUpOpen': False
+        }
 
         if self.results.pose_landmarks:
             for id, landmark in enumerate(self.results.pose_landmarks.landmark):
@@ -54,81 +65,45 @@ class poseDetector():
 
                 if id == 0:
                     cv2.arrowedLine(img, (m1, m2), (cx, cy), (255, 100, 0), 2)
-                if draw:
-                    cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
 
 
                 if len(landmarkListC) > 21:
-                    cv2.putText(img, str((int(width / 2), int(height / 4))), (10, 120), cv2.FONT_HERSHEY_PLAIN, 1,
-                                (255, 0, 255), 2)
-
-                    cv2.putText(img, str(landmarkListC[0]), (10, 180), cv2.FONT_HERSHEY_PLAIN, 1,
-                                (255, 0, 255), 2)
-
-                    if abs(landmarkListC[19][2] - landmarkListC[12][2]) < 8 and abs(
-                            landmarkListC[20][1] - landmarkListC[11][1]) < 8:
-                        cv2.putText(img, "XXX Hands Crossed", (100, 440), cv2.FONT_HERSHEY_PLAIN, 3,
+                    if abs(landmarkListC[19][2] - landmarkListC[12][2]) < 10 and abs(
+                            landmarkListC[20][1] - landmarkListC[11][1]) < 10:
+                        posesDetected['crossHands'] = True
+                        cv2.putText(img, "XXX Hands Crossed", (50, 40), cv2.FONT_HERSHEY_PLAIN, 3,
                                     (0, 255, 0), 4)
 
-                    if abs(landmarkListC[19][2] - landmarkListC[12][2]) < 8 and abs(landmarkListC[20][1] - landmarkListC[11][1]) < 8:
-                        cv2.putText(img, "XXX Hands Crossed", (100, 440), cv2.FONT_HERSHEY_PLAIN, 3,
-                                    (0, 0, 255), 4)
-
-                    if abs(landmarkListC[19][2] - landmarkListC[0][2]) < 8 and abs(
-                            landmarkListC[19][1] - landmarkListC[0][1]) < 8 or abs(
-                            landmarkListC[20][2] - landmarkListC[0][2]) < 8 and abs(
-                            landmarkListC[20][1] - landmarkListC[0][1]) < 8:
-                        cv2.putText(img, "Na ko mirishi???", (100, 440), cv2.FONT_HERSHEY_PLAIN, 3,
+                    if abs(landmarkListC[19][2] - landmarkListC[0][2]) < 10 and abs(landmarkListC[19][1] - landmarkListC[0][1]) < 10 or abs(
+                            landmarkListC[20][2] - landmarkListC[0][2]) < 10 and abs(landmarkListC[20][1] - landmarkListC[0][1]) < 10:
+                        posesDetected['touchingNose'] = True
+                        cv2.putText(img, "Na ko mirishi???", (50, 40), cv2.FONT_HERSHEY_PLAIN, 3,
                                     (0, 0, 255), 4)
 
                     if landmarkListC[13][2] > landmarkListC[15][2] and (landmarkListC[13][2] - landmarkListC[11][2] < 10):
+                        posesDetected['leftHandUpClosed'] = True
                         cv2.putText(img, "Left Hand is Up!", (50, 40), cv2.FONT_HERSHEY_PLAIN, 3,
                                     (0, 0, 255), 4)
 
                     if landmarkListC[14][2] > landmarkListC[16][2] and (landmarkListC[14][2] - landmarkListC[12][2] < 10):
+                        posesDetected['rightHandUpClosed'] = True
                         cv2.putText(img, "Right Hand is Up!", (50, 40), cv2.FONT_HERSHEY_PLAIN, 3,
                                     (0, 0, 255), 4)
 
-        return landmarkListC
-
-
-    def checkPose(self, img, landmarkListC):
-
-        fb = 0
-
-        posesDetected = {
-            'rightHandUpClosed': False,
-            'leftHandUpClosed': False,
-            'crossHands': False,
-            'touchingNose': False,
-            'rightHandUpOpen': False,
-            'leftHandUpOpen': False
-        }
-
-        if len(landmarkListC) > 21:
-            if landmarkListC[13][2] > landmarkListC[15][2] and (landmarkListC[13][2] - landmarkListC[11][2] < 10):
-                posesDetected['rightHandUpClosed'] = True
-
-            if landmarkListC[14][2] > landmarkListC[16][2] and (landmarkListC[14][2] - landmarkListC[12][2] < 10):
-                posesDetected['leftHandUpClosed'] = True
-
-            if abs(landmarkListC[19][2] - landmarkListC[0][2]) < 8 and abs(landmarkListC[19][1] - landmarkListC[0][1]) < 8 or abs(
-                            landmarkListC[20][2] - landmarkListC[0][2]) < 8 and abs(landmarkListC[20][1] - landmarkListC[0][1]) < 8:
-                posesDetected['touchingNose'] = True
-
-            if abs(landmarkListC[19][2] - landmarkListC[12][2]) < 8 and abs(
-                    landmarkListC[20][1] - landmarkListC[11][1]) < 8:
-                posesDetected['crossHands'] = True
-
-
-            if posesDetected['rightHandUpClosed'] == True:
+            if posesDetected['rightHandUpClosed']:
                 fb = 20
-            if posesDetected['leftHandUpClosed'] == True:
+            if posesDetected['leftHandUpClosed']:
                 fb = -20
+            if posesDetected['crossHands']:
+                time.sleep(3)
+                img4photo = me.get_frame_read().frame
+                cv2.imwrite(f'Resources/Images/{time.time()}.jpg', img4photo)
+                time.sleep(4)
 
             me.send_rc_control(0, fb, 0, 0)
 
-            return posesDetected
+        return landmarkListC, posesDetected
+
 
     def track(self, img, landmarkList, width, pid, pError):
 
@@ -138,12 +113,16 @@ class poseDetector():
             ud = 0
 
             height, width, channel = img.shape
-            m1 = int(width / 2)
             m2 = int(height / 3)
 
             error = x - width // 2
             speed = pid[0] * error + pid[1] * (error - pError)
             speed = int(np.clip(speed, -100, 100))
+
+            # while m2 > landmarkList[0][2]:
+            #     me.send_rc_control(0, 0, 20, 0)
+            # while m2 < landmarkList[0][2]:
+            #     me.send_rc_control(0, 0, -20, 0)
 
             if m2 > landmarkList[0][2]:
                 ud = 20
@@ -178,8 +157,7 @@ def main():
         img = me.get_frame_read().frame
         img = cv2.resize(img, (width, height))
         img = detector.findPose(img)
-        landmarkListC = detector.findPosition(img)
-        detector.checkPose(img, landmarkListC)
+        landmarkListC, posesDetected = detector.checkPose(img)
         pError = detector.track(img, landmarkListC, width, pid, pError)
         cTime = time.time()
         fps = 1 / (cTime - pTime)
@@ -189,6 +167,9 @@ def main():
 
         cv2.imshow("MediaPipe Pose", img)
         cv2.waitKey(1)
+        if posesDetected['touchingNose']:
+            me.land()
+            break
         if cv2.waitKey(1) & 0xFF == ord('q'):
             me.land()
             break
